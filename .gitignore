@@ -1,0 +1,31 @@
+#
+# Hola, porfa no me modifiques, nada de lo que esta listado aqui
+# debe ser versionado. Todos estos archivos son generados dinamicamente
+# tanto en el servidor o en tu "local". Todo lo que este listado aqui
+# sera ignorado al instalar el Magento en el servidor.
+#
+# Si aun asi crees que algo de esto debe ser versionado o el contenido
+# de este archivo deba ser modificado, por favor inicia una discusion en
+# el chat de tu proyecto. 
+#
+# Muchas gracias.
+# Estamos para ayudarte.
+#
+.DS_Store
+**.DS_Store
+pub/media/**
+!pub/media/.htaccess
+!pub/media/codazon/
+!pub/media/blog/
+pub/media/blog/cache/**
+!pub/media/label/
+!pub/media/wysiwyg/blog/
+!pub/media/wysiwyg/codazon/
+!pub/media/wysiwyg/fastest/
+pub/static/**
+!pub/static/.htaccess
+var/**
+!var/.htaccess
+app/etc/env.php
+app/etc/config.php
+nbproject
