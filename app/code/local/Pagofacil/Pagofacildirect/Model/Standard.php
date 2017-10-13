@@ -124,7 +124,7 @@ class Pagofacil_Pagofacildirect_Model_Standard extends Mage_Payment_Model_Method
         {            
             Mage::throwException("El servicio de PagoFacil no se encuentra");
         }
-        
+
         if ($response['autorizado'] == '0')
         {
             $errorMessage = $response['texto'] . "\n";
