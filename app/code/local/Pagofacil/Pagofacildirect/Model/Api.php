@@ -1,27 +1,40 @@
 <?php
+
 /**
- * API para el consumo de los servicios
- * de PagoFacil
- * @author ivelazquex <isai.velazquez@gmail.com>
+ * API para el consumo de los servicios de PagoFacil Plugin Magento 
+ * @author Miguel Gonzalez @miguelgoma <mike@pagofacil.net>
  */
+
 class Pagofacil_Pagofacildirect_Model_Api
 {
-    // --- ATTRIBUTES ---
+
     /**
-     * URL del servicio de PagoFacil para pruebas
-     * @var string
+     * URL del servicio de PagoFacil en ambiente de desarrollo
+     * @var string 
      */
+    
+    //protected $_urlDemo = 'http://core.dev/Magento/Magento/index/format/json/?method=transaccion';
+    protected $_urlDemo = 'https://sandbox.pagofacil.net/Magento/Magento/index/format/json/?method=transaccion';
 
-    //protected $_urlDemo = 'https://stapi.pagofacil.net/Wsrtransaccion/index/format/json';
-    protected $_urlDemo = 'http://core.dev/Magento/Magento/index/format/json';
-
-    protected $_urlVerify = 'http://core.dev/Magento/Magento/querytrans/';
+    /**
+     * URL del servicio de PagoFacil para verificar el cobro
+     * @var string 
+     */
+    //protected $_urlVerify = 'http://core.dev/Magento/Magento/querytrans/';
+    protected $_urlVerify = 'https://api.pagofacil.tech/Magento/Magento/querytrans/';
 
     /**
      * URL del servicio de PagoFacil en ambiente de produccion
      * @var string 
      */
-    protected $_urlProd = 'https://www.pagofacil.net/ws/public/Wsrtransaccion/index/format/json';
+    //protected $_urlProd = 'https://www.pagofacil.net/ws/public/Wsrtransaccion/index/format/json';
+    protected $_urlProd = 'https://api.pagofacil.tech/ws/public/Wsrtransaccion/index/format/json';
+
+    /**
+     * consume el servicio de pago de PagoFacil
+     * @param string[] vector con la informacion de la peticion
+     * @return mixed respuesta del consumo del servicio
+     */
 
     /**
      * respuesta sin parsear del servicio
@@ -33,67 +46,37 @@ class Pagofacil_Pagofacildirect_Model_Api
     {
         
     }
-    
-    /**
-     * consume el servicio de pago de PagoFacil
-     * @param string[] vector con la informacion de la peticion
-     * @return mixed respuesta del consumo del servicio
-     * @throws Exception
-     */
+
     public function payment($info)
     {
+
         $response = null;
 
-        if (!is_array($info))
-        {
-            throw new Exception('parameter is not an array');
-        }
+        if (!is_array($info)) throw new Exception('parameter is not an array');
 
         // Determina el entorno 
         $ambiente = ($info['prod'] == '1') ? $this->_urlProd : $this->_urlDemo;
 
         // Lanza la transaccion
         $query     = $this->buildParams($this->infoBuild('data', $info));
+        
         $consumeWS = json_decode($this->consumeWsPost($ambiente, $query),true);
 
         if (is_array($consumeWS)) {
             return $consumeWS['WebServices_Transacciones']['transaccion'];
         }
 
-        //Verifica si la transaccion y responde
-        $response = $this->verifyTransactionMagento('verify' ,$info);
+        $date = date('Y-m-d H:i:s');
+        $nTransaccion  = $this->infoBuild('error', $info);
+
+        $fecha = "Creado el: ".$date.' Transaccion: '. $nTransaccion['idPedido'];
+
+        Mage::log($fecha, null, 'mylogMagento.log', true);
+
+        //Verifica si la transaccion existe y responde
+        $response = $this->verifyTransactionMagento('verify', $info);
 
         return $response;
-    }
-
-    /**
-     * Envía la solicitud para consumir el sw de transacciones magento
-     * @param 
-     * @return 
-     */
-    private function consumeWsPost($url, $params)
-    {
-        $url = $url.'/?method=transaccion';
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        $this->_response = curl_exec($ch);
-        curl_close($ch);
-
-        return $this->_response;
-
-    }
-    
-    /**
-     * obtiene la respuesta del servicio
-     * @return string
-     */
-    public function getResponse()
-    {
-        return $this->_response;
     }
 
     /**
@@ -102,7 +85,8 @@ class Pagofacil_Pagofacildirect_Model_Api
      * @return mixed respuesta del consumo del servicio
      * @throws Exception
      */
-     public function paymentCash($info)
+
+    public function paymentCash($info)
     {
         $response = null;        
         
@@ -140,6 +124,7 @@ class Pagofacil_Pagofacildirect_Model_Api
         // Blindly accept the certificate
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         $this->_response = curl_exec($ch);
+
         curl_close($ch);
 
         // tratamiento de la respuesta del servicio
@@ -149,14 +134,35 @@ class Pagofacil_Pagofacildirect_Model_Api
     }
 
     /**
-     * Arreglos de parametros en el ws
+     * Envía la solicitud POST para consumir el sw de transacciones Magento
      * @param 
      * @return 
+     */
+    private function consumeWsPost($url, $params)
+    {
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $this->_response = curl_exec($ch);
+        curl_close($ch);
+
+        return $this->_response;
+
+    }
+
+    /**
+     * Arreglos de parametros en el ws
+     * @param Array Info
+     * @return Array Type
      */
     private function infoBuild($tipo, array $info )
     {
 
-         // Datos para la peticion del servicio
+        // Datos para la peticion del servicio
         $data = array(
             'idServicio'        => '3',
             'idSucursal'        => $info['idSucursal'],
@@ -168,7 +174,7 @@ class Pagofacil_Pagofacildirect_Model_Api
             'cp'                => $info['cp'],
             'mesExpiracion'     => $info['mesExpiracion'],
             'anyoExpiracion'    => $info['anyoExpiracion'],
-            'monto'             => 1,
+            'monto'             => $info['monto'],
             'email'             => $info['email'],
             'telefono'          => $info['telefono'],
             'celular'           => $info['celular'],
@@ -188,13 +194,16 @@ class Pagofacil_Pagofacildirect_Model_Api
         $verify = array(
             'idSucursal'        => $info['idSucursal'],
             'idUsuario'         => $info['idUsuario'],
-            'monto'             => 1,
+            'monto'             => $info['monto'],
             'idPedido'          => $info['idPedido'],
         );
 
-        $arrayRegresa = ($tipo == 'data') ? $data : $verify;
+        // Datos para los logs de transaccion erronea
+        $error = array(
+            'idPedido'          => $info['idPedido'],
+        );
 
-        return $arrayRegresa;
+        return $$tipo;
 
     }
 
@@ -203,7 +212,7 @@ class Pagofacil_Pagofacildirect_Model_Api
      * @param array de datos
      * @return querystring
      */
-    private function buildParams($data)
+    private function buildParams(array $data)
     {
 
         $query = '';
@@ -216,7 +225,7 @@ class Pagofacil_Pagofacildirect_Model_Api
     }
 
     /**
-     * Consume el se de magento verificando si la transaccion existe
+     * Consume el sw de magento verificando si la transaccion existe
      * @param tipo de arreglo, array de informacion general
      * @return resultado de la consulta al sw
      */
@@ -224,12 +233,19 @@ class Pagofacil_Pagofacildirect_Model_Api
     {
 
         $query        = $this->buildParams($this->infoBuild($type, $info));
-        $respVerifyWS = json_decode($this->consumeWsPost($this->_urlVerify, $query),true);
+        $respVerifyWS = json_decode($this->consumeWsPost($this->_urlVerify, '?'.$query),true);
 
         return $respVerifyWS;
 
     }
 
-
+    /**
+     * obtiene la respuesta del servicio
+     * @return string
+     */
+    public function getResponse()
+    {
+        return $this->_response;
+    }
 
 }
