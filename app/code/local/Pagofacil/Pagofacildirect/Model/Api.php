@@ -6,6 +6,7 @@
  */
 class Pagofacil_Pagofacildirect_Model_Api
 {
+    // --- ATTRIBUTES ---
     /**
      * URL del servicio de PagoFacil para pruebas
      * @var string
@@ -148,7 +149,7 @@ class Pagofacil_Pagofacildirect_Model_Api
     }
 
     /**
-     * Arreglos de parametros en el ws de magento
+     * Arreglos de parametros en el ws
      * @param 
      * @return 
      */
