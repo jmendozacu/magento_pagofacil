@@ -230,5 +230,4 @@ class Pagofacil_Pagofacildirect_Model_Api
 
     }
 
-
 }
