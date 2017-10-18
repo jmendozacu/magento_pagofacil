@@ -1,5 +1,25 @@
 <?xml version="1.0"?>
-<layouts><default>
+<layouts><checkout_onepage_index>
+   <reference name="head">
+      <action method="addCss">
+         <stylesheet>compropago/compropago.css</stylesheet>
+      </action>
+      <action method="addJs">
+         <script>compropago/compropago.js</script>
+      </action>
+   </reference>
+   <reference name="">
+
+        </reference>
+</checkout_onepage_index>
+<checkout_onepage_success>
+   <reference name="root">
+      <action method="setTemplate">
+         <template>compropago/cppayment/success.phtml</template>
+      </action>
+   </reference>
+</checkout_onepage_success>
+<default>
    <block name="formkey" type="core/template" template="core/formkey.phtml"/>
 </default>
 <default translate="label" module="page">
