@@ -170,46 +170,29 @@ class Pagofacil_Pagofacildirect_Model_CashCP extends Mage_Payment_Model_Method_A
     
     public function getProviders()
     {
-        $url = 'https://stapi.compropago.com/v1/providers/';
-        $url.= 'true';
+
+        $url = 'https://api.pagofacil.tech/cash/Rest_Conveniencestores';
 
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        curl_setopt($ch, CURLOPT_USERPWD, ":");
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        $this->_response = curl_exec($ch);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        $strResultado = curl_exec($ch);
         curl_close($ch);
 
-        $response = json_decode($this->_response, true);
+        $respuesta = json_decode($strResultado,true);
 
         if ($response['type'] == "error") {
             $errorMessage = $response['message'] . "\n";
             Mage::throwException($errorMessage);
         }
 
-        $hash = array();
-
-        foreach ($response as $record) {
-            $hash[$record['rank']] = $record;
+        $stores = array();
+        foreach ($respuesta['records'] as $row) {
+            $stores[] = array('internal_name' => $row['code'] , "name" => $row['code']);
         }
 
-        ksort($hash);
-
-        $records = array();
-
-        foreach ($hash as $record) {
-            $records[] = $record;
-        }
-        $storeConveinience = array("OXXO", "SEVEN_ELEVEN", "FARMACIA_ESQUIVAR", "EXTRA", "FARMACIA_ESQUIVAR", "CHEDRAUI");
-        foreach ($records as $id => $record) {
-            if (!in_array($record["internal_name"], $storeConveinience)) {
-                unset($records[$id]);
-            }
-        }
-
-        return $records;
+        return $stores;
     }   
 }
 
